@@ -1,0 +1,10 @@
+carrot
+potato
+tomato
+cucumber
+onion
+cabbage
+lettuce
+bell_pepper
+broccoli
+eggplant

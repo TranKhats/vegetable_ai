@@ -1,0 +1,21 @@
+# Dataset configuration for YOLOv8 vegetable classification
+
+# Path to dataset
+path: ./data  # dataset root dir
+train: processed/train  # train images (relative to 'path')
+val: processed/val  # val images (relative to 'path')
+test: processed/test  # test images (relative to 'path')
+
+# Classes
+nc: 10  # number of classes
+names: 
+  0: carrot
+  1: potato
+  2: tomato
+  3: cucumber
+  4: onion
+  5: cabbage
+  6: lettuce
+  7: bell_pepper
+  8: broccoli
+  9: eggplant

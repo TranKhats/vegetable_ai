@@ -1,0 +1,31 @@
+{
+  "data": {
+    "raw_dir": "./data/raw",
+    "processed_dir": "./data/processed",
+    "labels_dir": "./data/labels",
+    "target_size": [640, 640],
+    "split_ratios": [0.7, 0.2, 0.1],
+    "augment_factor": 3
+  },
+  "training": {
+    "model_name": "yolov8n.pt",
+    "epochs": 100,
+    "batch_size": 16,
+    "img_size": 640,
+    "lr0": 0.01,
+    "patience": 20,
+    "save_period": 10
+  },
+  "prediction": {
+    "confidence_threshold": 0.5,
+    "iou_threshold": 0.45
+  },
+  "preprocessing": {
+    "enhance": true,
+    "denoise": false
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "vegetable_ai.log"
+  }
+}
