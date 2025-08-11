@@ -117,6 +117,8 @@ def main():
     # Workflow options
     parser.add_argument("--vegetable", "-v", default="carrot",
                        help="Vegetable to process (default: carrot)")
+    parser.add_argument("--input-dir", "-i", default=None,
+                       help="Custom input directory for images (e.g., 'added'). If not specified, uses 'data/raw/{vegetable}'")
     parser.add_argument("--epochs", "-e", type=int, default=50,
                        help="Training epochs (default: 50)")
     parser.add_argument("--conf", "-c", type=float, default=0.5,
@@ -178,12 +180,16 @@ def main():
         return
     
     if args.label_only:
-        run_command([
-            sys.executable, "auto_label.py",
-            "--vegetable", args.vegetable,
-            "--conf", str(args.conf),
-            "--verify"
-        ], f"Auto-labelling {args.vegetable}")
+        # Build command with input-dir if specified
+        cmd = [sys.executable, "auto_label.py",
+               "--vegetable", args.vegetable,
+               "--conf", str(args.conf),
+               "--verify"]
+        
+        if args.input_dir:
+            cmd.extend(["--input-dir", args.input_dir])
+            
+        run_command(cmd, f"Auto-labelling {args.vegetable}")
         return
     
     # Run complete workflow

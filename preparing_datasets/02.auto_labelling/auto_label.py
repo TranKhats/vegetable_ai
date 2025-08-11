@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 import os
 
-def auto_label_remaining_images(vegetable="carrot", conf_threshold=0.5, iou_threshold=0.45):
+def auto_label_remaining_images(vegetable="carrot", conf_threshold=0.5, iou_threshold=0.45, input_dir=None):
     """
     Auto-label remaining unlabeled images using trained YOLOv8 model
     
@@ -17,13 +17,22 @@ def auto_label_remaining_images(vegetable="carrot", conf_threshold=0.5, iou_thre
         vegetable: Vegetable name to process
         conf_threshold: Confidence threshold for detections
         iou_threshold: IoU threshold for NMS
+        input_dir: Custom input directory (e.g., 'added'). If None, uses 'data/raw/{vegetable}'
     """
     
     print(f"🤖 Auto-labelling remaining {vegetable} images...")
     
     # Paths
     base_dir = Path("../../")
-    images_dir = base_dir / f"data/raw/{vegetable}"
+    
+    # Use custom input directory if specified, otherwise default to data/raw/{vegetable}
+    if input_dir:
+        images_dir = base_dir / f"data/raw/{input_dir}"
+        print(f"📁 Using custom input directory: {images_dir}")
+    else:
+        images_dir = base_dir / f"data/raw/{vegetable}"
+        print(f"📁 Using default directory: {images_dir}")
+        
     labels_dir = base_dir / "data/yolo_labels"
     
     # Model path
@@ -43,7 +52,14 @@ def auto_label_remaining_images(vegetable="carrot", conf_threshold=0.5, iou_thre
     # Find unlabeled images
     print("🔍 Scanning for unlabeled images...")
     
-    all_images = list(images_dir.glob(f"{vegetable}_*.jpg"))
+    # Use broader pattern for custom directories, or specific pattern for vegetable directories
+    if input_dir:
+        all_images = list(images_dir.glob("*.jpg"))  # All .jpg files in custom directory
+        print(f"   Found {len(all_images)} images in {input_dir}")
+    else:
+        all_images = list(images_dir.glob(f"{vegetable}_*.jpg"))  # Specific vegetable pattern
+        print(f"   Found {len(all_images)} {vegetable} images")
+        
     labeled_images = set()
     
     for txt_file in labels_dir.glob("*.txt"):
@@ -219,6 +235,8 @@ def main():
     parser = argparse.ArgumentParser(description="Auto-label images using trained YOLOv8 model")
     parser.add_argument("--vegetable", "-v", default="carrot",
                        help="Vegetable to auto-label (default: carrot)")
+    parser.add_argument("--input-dir", default=None,
+                       help="Custom input directory (e.g., 'added'). If not specified, uses 'data/raw/{vegetable}'")
     parser.add_argument("--conf", "-c", type=float, default=0.5,
                        help="Confidence threshold (default: 0.5)")
     parser.add_argument("--iou", "-i", type=float, default=0.45,
@@ -240,7 +258,8 @@ def main():
     results = auto_label_remaining_images(
         vegetable=args.vegetable,
         conf_threshold=args.conf,
-        iou_threshold=args.iou
+        iou_threshold=args.iou,
+        input_dir=getattr(args, 'input_dir', None)
     )
     
     # Verify if requested
