@@ -1,0 +1,128 @@
+================================================================================================
+CARROT AUTO-LABELLING TRAINING RESULTS - HISTORY
+================================================================================================
+
+📅 Date: August 11, 2025
+🥕 Project: Vegetable AI - Carrot Detection
+🎯 Goal: Auto-labelling remaining 434 unlabeled carrot images
+
+================================================================================================
+TRAINING ATTEMPT #1 - FAILED (Poor Results)
+================================================================================================
+
+⚙️ TRAINING CONFIGURATION:
+├── Model: YOLOv8n (nano) - 3.2M parameters
+├── Epochs: 30
+├── Batch Size: 8 (auto-reduced from 16 for CPU)
+├── Image Size: 640x640
+├── Device: CPU (Apple M1)
+├── Dataset: 78 train + 20 validation images
+└── Duration: ~15-20 minutes
+
+📊 LOSS FUNCTION SETTINGS (OLD - PROBLEMATIC):
+├── box: 7.5 (TOO HIGH - over-focus on box regression)
+├── cls: 0.5 (TOO LOW - poor classification learning)
+├── dfl: 1.5
+├── pose: 12.0 (UNNECESSARY for object detection)
+├── kobj: 1.0 (UNNECESSARY for object detection)
+├── label_smoothing: 0.0 (NO regularization)
+├── lr0: 0.01 (TOO HIGH - unstable training)
+└── patience: 15
+
+🎯 TRAINING RESULTS (VERY POOR):
+├── mAP50: 0.6423 (64.23%) - Acceptable
+├── mAP50-95: 0.2513 (25.13%) - Low
+├── Precision: 0.0053 (0.53%) - EXTREMELY BAD! 
+├── Recall: 1.0000 (100%) - SEVERE OVERFITTING!
+└── Speed: 1.1ms preprocess, 138.1ms inference, 0.6ms postprocess
+
+❌ CRITICAL ISSUES IDENTIFIED:
+├── 99.47% of predictions are FALSE POSITIVES
+├── Model cannot distinguish carrot from background
+├── Severe overfitting - memorized training data
+├── Loss weights heavily biased toward box regression
+└── Model too small for complex carrot detection task
+
+🔍 AUTO-LABELLING RESULTS (WITH CONFIDENCE=0.02):
+├── ✅ Successfully labeled: 434/434 images (100%)
+├── ⚠️  Low confidence detections: 434/434 images (100%)
+├── ❌ Failed detections: 0/434 images (0%)
+├── 📊 Average detections per image: 5-20 boxes
+├── 📊 Confidence range: 0.021-0.027 (EXTREMELY LOW)
+└── 📁 Output: 4,233 total bounding boxes generated
+
+⚠️ AUTO-LABELLING QUALITY ASSESSMENT:
+├── Status: POOR QUALITY - requires extensive manual review
+├── Issue: Massive number of false positives due to 0.53% precision
+├── Problem: Model sees "carrots everywhere" - cannot discriminate
+├── Impact: Auto-labels are unreliable for production use
+└── Recommendation: RETRAIN with improved parameters
+
+================================================================================================
+LESSONS LEARNED & IMPROVEMENTS NEEDED:
+================================================================================================
+
+🔧 MODEL IMPROVEMENTS:
+├── Upgrade from YOLOv8n → YOLOv8s (more parameters for better accuracy)
+├── Increase epochs: 30 → 100 (better convergence)
+├── Optimize batch size: 8 → 4 (better gradient updates for small dataset)
+└── Conservative learning rate: 0.01 → 0.001
+
+⚖️ LOSS FUNCTION REBALANCING:
+├── Reduce box focus: 7.5 → 3.0
+├── Increase classification focus: 0.5 → 1.5 (FIX PRECISION!)
+├── Remove unnecessary components: pose, kobj
+├── Add regularization: label_smoothing 0.0 → 0.15
+└── Increase weight decay: 0.0005 → 0.001
+
+🎨 AUGMENTATION OPTIMIZATION:
+├── Conservative color augmentation (reduce overfitting)
+├── Add rotation: degrees 0.0 → 5.0
+├── Add mixup: 0.0 → 0.1 (regularization)
+├── Reduce mosaic intensity: 1.0 → 0.8
+└── Balanced augmentation strategy
+
+📈 EXPECTED IMPROVEMENTS:
+├── Target mAP50: 75-85% (↑15-30%)
+├── Target Precision: 15-40% (↑30-80x improvement!)
+├── Target Recall: 80-90% (more balanced)
+├── Auto-labelling confidence: >0.3 (vs current 0.02)
+└── Manual review requirement: Significantly reduced
+
+================================================================================================
+NEXT TRAINING PLAN - ATTEMPT #2:
+================================================================================================
+
+🎯 NEW CONFIGURATION:
+├── Model: YOLOv8s (small) - 11.2M parameters
+├── Epochs: 100 
+├── Batch: 4
+├── Loss: Rebalanced (cls=1.5, box=3.0, label_smoothing=0.15)
+├── LR: Conservative (0.001)
+├── Patience: 20
+└── Expected Duration: ~60-80 minutes
+
+🎪 SUCCESS CRITERIA:
+├── Precision > 15% (minimum acceptable)
+├── Recall: 80-95% (balanced)
+├── mAP50 > 75%
+├── Auto-labelling confidence > 0.3
+└── <50% manual review required
+
+================================================================================================
+STATUS: READY FOR IMPROVED TRAINING ATTEMPT #2
+================================================================================================
+
+🗑️ CLEANUP COMPLETED:
+├── Old training results backed up to: runs/detect/carrot_auto_labeller_OLD_FAILED_backup/
+├── Backup size: 39MB (charts, weights, logs)
+├── Training directory cleared for fresh start
+└── Ready to train with improved parameters
+
+⚡ READY TO RUN:
+├── Command: python train_model.py --vegetable carrot --epochs 100 --batch 4
+├── Expected model: YOLOv8s with optimized loss functions
+├── Expected output: runs/detect/carrot_auto_labeller/ (new experiment)
+└── Expected duration: 60-80 minutes
+
+================================================================================================

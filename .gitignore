@@ -120,6 +120,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+labeling_env/
 .env
 .venv
 env/
@@ -248,3 +249,8 @@ backup/
 # Config overrides (keep default config.json in repo)
 config_local.json
 config_override.json
+
+# Dataset directories  
+data/
+*/dataset_*/
+dataset_carrot/
