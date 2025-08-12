@@ -41,11 +41,15 @@ def prepare_yolo_dataset(vegetable="carrot", train_ratio=0.8):
     unlabeled_files = []
     
     print("🔍 Scanning for labeled and unlabeled images...")
-    
-    for img_file in images_dir.glob(f"{vegetable}_*.jpg"):
+    image_files = []
+    print(f"   📂 xxx {vegetable}")
+    if vegetable == "all":
+        image_files = images_dir.glob("*.jpg")
+    else:
+        image_files = images_dir.glob(f"{vegetable}_*.jpg")
+    for img_file in image_files:
         txt_name = img_file.stem + ".txt"
         txt_path = labels_dir / txt_name
-        
         if txt_path.exists():
             labeled_files.append((img_file, txt_path))
         else:
