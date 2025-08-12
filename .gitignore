@@ -251,6 +251,6 @@ config_local.json
 config_override.json
 
 # Dataset directories  
-data/
+!data/yolo_labels/classes.txt
 */dataset_*/
 dataset_carrot/
