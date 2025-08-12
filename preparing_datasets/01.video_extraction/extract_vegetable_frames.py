@@ -195,33 +195,18 @@ def extract_frames_from_video(video_path, output_dir, vegetable_name, frame_inte
             timestamp = frame_count / fps if fps > 0 else frame_count
             
             # 1. Save RAW frame first (no processing, preserve original contrast)
-            raw_frame = cv2.resize(frame, target_size, interpolation=cv2.INTER_LANCZOS4)
             raw_filename = f"{vegetable_name}_{video_path.stem}_{extracted_count:04d}_t{timestamp:.1f}s_raw.jpg"
             raw_filepath = output_dir / raw_filename
-            
-            raw_success = cv2.imwrite(str(raw_filepath), raw_frame, [cv2.IMWRITE_JPEG_QUALITY, 100])
+            raw_success = cv2.imwrite(str(raw_filepath), frame, [cv2.IMWRITE_JPEG_QUALITY, 100])
             if raw_success:
                 extracted_count += 1
                 print(f"      💎 Saved RAW: {raw_filename}")
-            
-            # 2. Resize to target size (640x640 for YOLOv8) 
-            processed_frame = cv2.resize(frame, target_size, interpolation=cv2.INTER_LANCZOS4)
-            
-            # 3. Apply smoothing filter (skip to preserve original quality)
-            # processed_frame = apply_smoothing_filter(processed_frame, filter_type)
-            
-            # 4. Convert color space (keep BGR to avoid conversion loss)
-            final_frame = processed_frame  # Keep original BGR
-            
-            # Save processed frame
+            # 2. Save processed frame (no resize)
             original_filename = f"{vegetable_name}_{video_path.stem}_{extracted_count:04d}_t{timestamp:.1f}s.jpg"
             original_filepath = output_dir / original_filename
-            
-            # Convert back to BGR for saving with OpenCV
-            save_frame = cv2.cvtColor(final_frame, cv2.COLOR_RGB2BGR) if color_space == 'RGB' else final_frame
+            save_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR) if color_space == 'RGB' else frame
             if color_space == 'HSV':
-                save_frame = cv2.cvtColor(final_frame, cv2.COLOR_HSV2BGR)
-            
+                save_frame = cv2.cvtColor(frame, cv2.COLOR_HSV2BGR)
             success = cv2.imwrite(str(original_filepath), save_frame, [cv2.IMWRITE_JPEG_QUALITY, 100])
             if success:
                 extracted_count += 1
@@ -229,7 +214,7 @@ def extract_frames_from_video(video_path, output_dir, vegetable_name, frame_inte
             
             # 4. Apply augmentation if enabled
             if enable_augmentation:
-                augmented_frames = augment_frame(processed_frame, augmentation_types)
+                augmented_frames = augment_frame(frame, augmentation_types)
                 
                 for aug_frame, aug_suffix in augmented_frames:
                     # Convert color space for augmented frame
