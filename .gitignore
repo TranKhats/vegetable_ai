@@ -250,7 +250,8 @@ backup/
 config_local.json
 config_override.json
 
-# Dataset directories  
+# Dataset directories
+data/yolo_labels/*.txt
 !data/yolo_labels/classes.txt
 */dataset_*/
 dataset_carrot/

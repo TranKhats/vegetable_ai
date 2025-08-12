@@ -281,6 +281,8 @@ def extract_vegetable_frames(vegetable_name, frame_interval=60, target_size=(640
     for ext in video_extensions:
         video_files.extend(videos_dir.glob(f"*{ext}"))
         video_files.extend(videos_dir.glob(f"*{ext.upper()}"))
+    # Remove duplicate files (same file with different case extension)
+    video_files = list(set(video_files))
     
     if not video_files:
         print(f"❌ No video files found in {videos_dir}")
