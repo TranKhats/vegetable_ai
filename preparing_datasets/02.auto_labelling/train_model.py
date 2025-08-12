@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 import os
 
-def train_auto_labelling_model(vegetable="carrot", epochs=100, imgsz=640, batch=4):
+def train_auto_labelling_model(vegetable="all", epochs=100, imgsz=640, batch=4):
     """
     Train YOLOv8 model on manually labeled data for auto-labelling
     
@@ -153,8 +153,8 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description="Train YOLOv8 for auto-labelling")
-    parser.add_argument("--vegetable", "-v", default="carrot",
-                       help="Vegetable to train for (default: carrot)")
+    parser.add_argument("--vegetable", "-v", default="all",
+                       help="Vegetable to train for (default: all)")
     parser.add_argument("--epochs", "-e", type=int, default=100,
                        help="Number of training epochs (default: 100)")
     parser.add_argument("--imgsz", "-s", type=int, default=640,

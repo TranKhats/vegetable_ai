@@ -84,18 +84,59 @@ python prepare_dataset.py --vegetable carrot --train-ratio 0.8
 # - Tạo dataset.yaml config
 ```
 
-### **Model Training**
+
+## 🏋️‍♂️ **Model Training Steps**
+
+### **Step 1: Chuẩn bị dataset**
 ```bash
-# Train với default parameters
+python prepare_dataset.py --vegetable carrot --train-ratio 0.8
+# Tạo thư mục dataset_carrot/ với train/val/images và labels, cùng file dataset.yaml
+```
+
+### **Step 2: Training YOLOv8 model**
+```bash
+# Train với thông số mặc định
 python train_model.py --vegetable carrot
 
-# Train với custom parameters
+# Train với thông số tùy chỉnh
 python train_model.py --vegetable carrot --epochs 100 --batch 32 --imgsz 640
 
-# Parameters:
-# --epochs: Số epochs training (default: 50)
+# Các tham số phổ biến:
+# --epochs: Số vòng lặp huấn luyện (default: 50)
 # --batch: Batch size (default: 16)
-# --imgsz: Image size (default: 640)
+# --imgsz: Kích thước ảnh (default: 640)
+# --weights: Đường dẫn model pretrain (nếu muốn finetune)
+# --device: Chọn GPU/CPU (default: auto)
+```
+
+### **Step 3: Theo dõi quá trình training**
+```bash
+# Xem log training, kết quả, và mô hình lưu tại:
+runs/detect/carrot_auto_labeller/
+# Xem metrics, loss, mAP qua file results.png hoặc TensorBoard:
+tensorboard --logdir runs/detect
+```
+
+### **Step 4: Đánh giá và sử dụng model**
+```bash
+# Model tốt nhất sẽ lưu ở:
+runs/detect/carrot_auto_labeller/weights/best.pt
+# Dùng model này để inference hoặc auto-label tiếp
+```
+
+
+### **Step 5: Training cho tất cả các loại rau củ (multi-class, one-time)**
+```bash
+# 1. Chuẩn bị dataset tổng hợp (tất cả các loại rau củ)
+#copy hết tất cả image của những loại vegetable bỏ vào raw/all 
+python prepare_dataset.py --vegetable all --train-ratio 0.8
+# 2. Đảm bảo file dataset.yaml chứa đủ đường dẫn images/labels cho tất cả class
+# 3. Đảm bảo file classes.txt liệt kê đầy đủ các loại rau củ
+
+# 4. Training YOLOv8 cho toàn bộ dataset chỉ với một lần:
+python train_model.py --vegetable all --epochs 100 --batch 32 --imgsz 640
+# Model sẽ nhận diện tất cả class trong một lần train, không cần train riêng từng loại
+# Kết quả lưu tại runs/detect/all_auto_labeller/
 ```
 
 ### **Auto-Labelling**
