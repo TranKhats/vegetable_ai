@@ -42,11 +42,12 @@ def prepare_yolo_dataset(vegetable="carrot", train_ratio=0.8):
     
     print("🔍 Scanning for labeled and unlabeled images...")
     image_files = []
-    print(f"   📂 xxx {vegetable}")
-    if vegetable == "all":
-        image_files = images_dir.glob("*.jpg")
-    else:
-        image_files = images_dir.glob(f"{vegetable}_*.jpg")
+    print(f"📂 Scanning directory: {images_dir}")
+    image_files = images_dir.glob("*.jpg")
+    # if vegetable == "all":
+    #     image_files = images_dir.glob("*.jpg")
+    # else:
+    #     image_files = images_dir.glob(f"{vegetable}_*.jpg")
     for img_file in image_files:
         txt_name = img_file.stem + ".txt"
         txt_path = labels_dir / txt_name
@@ -120,8 +121,8 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description="Prepare dataset for YOLOv8 auto-labelling")
-    parser.add_argument("--vegetable", "-v", default="carrot", 
-                       help="Vegetable to process (default: carrot)")
+    parser.add_argument("--vegetable", "-v", default="all", 
+                       help="Vegetable to process (default: all)")
     parser.add_argument("--train-ratio", "-r", type=float, default=0.8,
                        help="Train/val split ratio (default: 0.8)")
     

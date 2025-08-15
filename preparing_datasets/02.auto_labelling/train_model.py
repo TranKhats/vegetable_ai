@@ -64,7 +64,7 @@ def train_auto_labelling_model(vegetable="all", epochs=100, imgsz=640, batch=4):
         'batch': batch,
         'name': f'{vegetable}_auto_labeller',
         'project': 'runs/detect',
-        'patience': 20,  # Increased from 15 → 20 (more patience for convergence)
+        'patience': 50,  # Increased from 15 → 20 (more patience for convergence)
         'save': True,
         'cache': False,  # Disable caching to save memory
         'device': device,
@@ -88,7 +88,7 @@ def train_auto_labelling_model(vegetable="all", epochs=100, imgsz=640, batch=4):
         'cls': 1.5,  # Increased from 0.5 → 1.5 (MORE focus on classification - FIX precision!)
         'dfl': 1.0,  # Reduced from 1.5 → 1.0 (balanced distribution focal loss)
         # Removed 'pose' and 'kobj' - not needed for object detection
-        'label_smoothing': 0.15,  # Increased from 0.0 → 0.15 (reduce overfitting)
+        #'label_smoothing': 0.05,  # Increased from 0.0 → 0.15 (reduce overfitting)
         'nbs': 64,  # Nominal batch size
         
         # IMPROVED AUGMENTATION for better generalization

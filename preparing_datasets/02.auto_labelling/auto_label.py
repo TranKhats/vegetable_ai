@@ -9,142 +9,125 @@ import cv2
 import numpy as np
 import os
 
-def auto_label_remaining_images(vegetable="carrot", conf_threshold=0.5, iou_threshold=0.45, input_dir=None):
+def auto_label_remaining_images(vegetable="all", conf_threshold=0.5, iou_threshold=0.45, input_dir=None):
     """
     Auto-label remaining unlabeled images using trained YOLOv8 model
-    
+
     Args:
-        vegetable: Vegetable name to process
+        vegetable: Vegetable name to process ('all' for all vegetables)
         conf_threshold: Confidence threshold for detections
         iou_threshold: IoU threshold for NMS
         input_dir: Custom input directory (e.g., 'added'). If None, uses 'data/raw/{vegetable}'
     """
-    
+
     print(f"🤖 Auto-labelling remaining {vegetable} images...")
-    
-    # Paths
+    print(f"input_dir: {input_dir}")
+    print(f"vegetable: {vegetable}")
     base_dir = Path("../../")
-    
-    # Use custom input directory if specified, otherwise default to data/raw/{vegetable}
+
+    # Determine images_dir and model_path
     if input_dir:
         images_dir = base_dir / f"data/raw/{input_dir}"
         print(f"📁 Using custom input directory: {images_dir}")
+        model_path = Path(f"runs/detect/{vegetable}_auto_labeller/weights/best.pt")
+    elif vegetable == "all":
+        images_dir = base_dir / "data/raw/all"
+        print(f"📁 Using 'all' vegetables directory: {images_dir}")
+        model_path = Path("runs/detect/all_auto_labeller/weights/best.pt")
     else:
         images_dir = base_dir / f"data/raw/{vegetable}"
         print(f"📁 Using default directory: {images_dir}")
-        
+        model_path = Path(f"runs/detect/{vegetable}_auto_labeller/weights/best.pt")
+
     labels_dir = base_dir / "data/yolo_labels"
-    
-    # Model path
-    model_path = Path(f"runs/detect/{vegetable}_auto_labeller/weights/best.pt")
-    
+
     if not model_path.exists():
         print(f"❌ Trained model not found: {model_path}")
         print("   Run train_model.py first!")
         return
-    
+
     print(f"📦 Loading trained model: {model_path}")
     model = YOLO(str(model_path))
-    
-    # Create labels directory if it doesn't exist
+
     labels_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Find unlabeled images
+
     print("🔍 Scanning for unlabeled images...")
-    
-    # Use broader pattern for custom directories, or specific pattern for vegetable directories
+
+    # Find images
     if input_dir:
-        all_images = list(images_dir.glob("*.jpg"))  # All .jpg files in custom directory
+        all_images = list(images_dir.glob("*.jpg"))
         print(f"   Found {len(all_images)} images in {input_dir}")
     else:
-        all_images = list(images_dir.glob(f"{vegetable}_*.jpg"))  # Specific vegetable pattern
+        all_images = list(images_dir.glob("*.jpg"))
         print(f"   Found {len(all_images)} {vegetable} images")
-        
+
     labeled_images = set()
-    
     for txt_file in labels_dir.glob("*.txt"):
         img_name = txt_file.stem + ".jpg"
         labeled_images.add(img_name)
-    
+
     unlabeled_images = [img for img in all_images if img.name not in labeled_images]
-    
+
     print(f"📊 Image statistics:")
     print(f"   📁 Total images: {len(all_images)}")
     print(f"   ✅ Already labeled: {len(labeled_images)}")
     print(f"   ❌ Unlabeled: {len(unlabeled_images)}")
-    
+
     if not unlabeled_images:
         print("🎉 All images are already labeled!")
         return
-    
+
     print(f"🎯 Detection parameters:")
     print(f"   🎚️  Confidence threshold: {conf_threshold}")
     print(f"   🔗 IoU threshold: {iou_threshold}")
-    
-    # Auto-label unlabeled images
+
     auto_labeled_count = 0
     no_detection_count = 0
     low_confidence_count = 0
     error_count = 0
-    
+
     print(f"\n🚀 Starting auto-labelling {len(unlabeled_images)} images...")
-    
+
     for i, img_path in enumerate(unlabeled_images, 1):
         try:
-            # Run inference
             results = model(str(img_path), conf=conf_threshold, iou=iou_threshold, verbose=False)
-            
-            # Get predictions
             boxes = results[0].boxes
-            
+
             if boxes is not None and len(boxes) > 0:
-                # Create TXT file
                 txt_path = labels_dir / (img_path.stem + ".txt")
-                
                 yolo_lines = []
                 max_confidence = 0
-                
+
                 for box in boxes:
-                    # Get YOLO format coordinates (normalized 0-1)
                     x_center, y_center, width, height = box.xywhn[0].cpu().numpy()
                     class_id = int(box.cls[0].cpu().numpy())
                     confidence = float(box.conf[0].cpu().numpy())
-                    
                     max_confidence = max(max_confidence, confidence)
-                    
-                    # Create YOLO format line
                     yolo_line = f"{class_id} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}"
                     yolo_lines.append(yolo_line)
-                
-                # Write TXT file
+
                 with open(txt_path, 'w') as f:
                     f.write('\n'.join(yolo_lines))
-                
+
                 auto_labeled_count += 1
-                
-                # Check confidence level
+
+                conf_indicator = "⚠️ " if max_confidence < 0.7 else "✅"
                 if max_confidence < 0.7:
                     low_confidence_count += 1
-                    conf_indicator = "⚠️ "
-                else:
-                    conf_indicator = "✅"
-                
+
                 print(f"{conf_indicator} ({i:3d}/{len(unlabeled_images)}) {img_path.name} → {len(boxes)} objects (conf: {max_confidence:.3f})")
-                
             else:
                 no_detection_count += 1
-                print(f"❌ ({i:3d}/{len(unlabeled_images)}) No {vegetable} detected: {img_path.name}")
-        
+                print(f"❌ ({i:3d}/{len(unlabeled_images)}) No object detected: {img_path.name}")
+
         except Exception as e:
             error_count += 1
             print(f"💥 ({i:3d}/{len(unlabeled_images)}) Error processing {img_path.name}: {e}")
-        
-        # Progress indicator every 50 images
+
         if i % 50 == 0:
             progress = (i / len(unlabeled_images)) * 100
             print(f"📊 Progress: {progress:.1f}% ({i}/{len(unlabeled_images)})")
-    
-    # Final summary
+
     print(f"\n{'='*50}")
     print(f"🎉 AUTO-LABELLING COMPLETED!")
     print(f"{'='*50}")
@@ -154,20 +137,20 @@ def auto_label_remaining_images(vegetable="carrot", conf_threshold=0.5, iou_thre
     print(f"   ❌ No detections: {no_detection_count}")
     print(f"   💥 Errors: {error_count}")
     print(f"   📁 Total processed: {len(unlabeled_images)}")
-    
+
     total_labeled_now = len(labeled_images) + auto_labeled_count
     print(f"\n📈 Overall progress:")
     print(f"   📁 Total images: {len(all_images)}")
     print(f"   ✅ Total labeled: {total_labeled_now}")
     print(f"   📊 Completion: {(total_labeled_now / len(all_images)) * 100:.1f}%")
-    
+
     if low_confidence_count > 0:
         print(f"\n⚠️  Recommendation:")
         print(f"   Review {low_confidence_count} low-confidence predictions manually")
         print(f"   These files might need manual correction")
-    
+
     print(f"\n📂 Labels saved to: {labels_dir}")
-    
+
     return {
         "auto_labeled": auto_labeled_count,
         "no_detection": no_detection_count,
@@ -233,8 +216,8 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description="Auto-label images using trained YOLOv8 model")
-    parser.add_argument("--vegetable", "-v", default="carrot",
-                       help="Vegetable to auto-label (default: carrot)")
+    parser.add_argument("--vegetable", "-v", default="all",
+                       help="Vegetable to auto-label (default: all)")
     parser.add_argument("--input-dir", default=None,
                        help="Custom input directory (e.g., 'added'). If not specified, uses 'data/raw/{vegetable}'")
     parser.add_argument("--conf", "-c", type=float, default=0.5,
