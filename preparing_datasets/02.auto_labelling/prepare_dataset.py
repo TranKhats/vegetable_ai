@@ -80,16 +80,69 @@ def prepare_yolo_dataset(vegetable="carrot", train_ratio=0.8):
     print("📋 Copying training files...")
     for img_path, txt_path in train_files:
         shutil.copy(img_path, train_images / img_path.name)
-        shutil.copy(txt_path, train_labels / txt_path.name)
+        # Remap to class 0 for single-vegetable datasets
+        if vegetable != "all":
+            dest_txt = train_labels / txt_path.name
+            with open(txt_path, 'r') as src_f, open(dest_txt, 'w') as dst_f:
+                for line in src_f:
+                    parts = line.strip().split()
+                    if len(parts) >= 5:
+                        remapped = ["0", parts[1], parts[2], parts[3], parts[4]]
+                        dst_f.write(" ".join(remapped) + "\n")
+        else:
+            shutil.copy(txt_path, train_labels / txt_path.name)
     
     # Copy val files
     print("📋 Copying validation files...")
     for img_path, txt_path in val_files:
         shutil.copy(img_path, val_images / img_path.name)
-        shutil.copy(txt_path, val_labels / txt_path.name)
+        if vegetable != "all":
+            dest_txt = val_labels / txt_path.name
+            with open(txt_path, 'r') as src_f, open(dest_txt, 'w') as dst_f:
+                for line in src_f:
+                    parts = line.strip().split()
+                    if len(parts) >= 5:
+                        remapped = ["0", parts[1], parts[2], parts[3], parts[4]]
+                        dst_f.write(" ".join(remapped) + "\n")
+        else:
+            shutil.copy(txt_path, val_labels / txt_path.name)
+
+    # Remove any stale label caches to force Ultralytics to reindex
+    for cache_path in [train_labels / "labels.cache", val_labels / "labels.cache"]:
+        if cache_path.exists():
+            try:
+                cache_path.unlink()
+            except Exception:
+                pass
     
     # Create dataset.yaml
-    yaml_content = f"""# YOLOv8 Dataset Configuration for {vegetable} auto-labelling
+    if vegetable == "all":
+        # Multi-class config for 'all' using classes from classes.txt if available
+        classes_file = labels_dir / "classes.txt"
+        if classes_file.exists():
+            with open(classes_file, 'r') as cf:
+                class_names = [line.strip() for line in cf if line.strip()]
+        else:
+            class_names = ["carrot", "potato", "orange"]
+
+        names_lines = "\n".join([f"  {i}: {name}" for i, name in enumerate(class_names)])
+        yaml_content = f"""# YOLOv8 Dataset Configuration for {vegetable} auto-labelling
+path: {dataset_dir.absolute()}  # dataset root dir
+train: train/images  # train images (relative to 'path')
+val: val/images  # val images (relative to 'path')
+
+# Classes
+nc: {len(class_names)}  # number of classes
+names:
+{names_lines}
+
+# Auto-labelling info
+total_images: {len(labeled_files) + len(unlabeled_files)}
+labeled_images: {len(labeled_files)}
+unlabeled_images: {len(unlabeled_files)}
+"""
+    else:
+        yaml_content = f"""# YOLOv8 Dataset Configuration for {vegetable} auto-labelling
 path: {dataset_dir.absolute()}  # dataset root dir
 train: train/images  # train images (relative to 'path')
 val: val/images  # val images (relative to 'path')
